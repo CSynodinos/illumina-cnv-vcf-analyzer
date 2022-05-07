@@ -4,6 +4,7 @@ from __future__ import annotations
 from inspect import getfullargspec
 from re import search, sub, compile, split
 import pandas as pd
+from sqlalchemy import all_
 
 
 class NoCnvFoundError(Exception):
@@ -177,12 +178,45 @@ class vcf_parser:
 
         # To be used in description.
         num_of_df_entries = len(df.index)   # Number of CNV's
+
+        ## cnv's
         all_cnvs = df["ALT"].value_counts()
-        ent_index = ["DUPS", "DELS"]
-        all_cnvs.index = ent_index
-        num_of_df_dups = str(all_cnvs.get(key = "DUPS"))
-        num_of_df_dels = str(all_cnvs.get(key = "DELS"))
+        if self.find_only_dups:
+            ent_index = ["DUPS"]
+            all_cnvs.index = ent_index
+            num_of_df_dups = str(all_cnvs.get(key = "DUPS"))
+            num_of_df_dels = None
+        elif self.find_only_dels:
+            ent_index = ["DELS"]
+            all_cnvs.index = ent_index
+            num_of_df_dups = None
+            num_of_df_dels = str(all_cnvs.get(key = "DELS"))
+        else:
+            ent_index = ["DUPS", "DELS"]
+            all_cnvs.index = ent_index
+            num_of_df_dups = str(all_cnvs.get(key = "DUPS"))
+            num_of_df_dels = str(all_cnvs.get(key = "DELS"))
+
+        ## Scores
+        if not "DUPS" in set(all_cnvs):
+            dups_score = None
+            dels_score = df["QUAL"].value_counts().describe()
+        if not "DELS" in set(all_cnvs):
+            dups_score = df["QUAL"].value_counts().describe()
+            dels_score = None
+        if "<DEL>" and "<DUP>" in set(df["ALT"]):
+            df_scores = df.loc[:, df.columns.intersection(['ALT','QUAL'])]
+            df_dups = df_scores.loc[df['ALT'] == "<DUP>"].drop(columns = 'ALT')
+            df_dels = df_scores.loc[df['ALT'] == "<DEL>"].drop(columns = 'ALT')
+            dups_score = df_dups["QUAL"].value_counts().describe()
+            dels_score = df_dels["QUAL"].value_counts().describe()
+
+        if not dups_score.empty:
+            dups_count = list(dups_score.loc[['count']])
+            dups_count = ''.join([str(c) for c in dups_count])
         
+
+        #print(all_scores)
 
 def main():
     vcf_parser(vcf_fl="test_files/a_sample.cnv.vcf")._stats_writer()

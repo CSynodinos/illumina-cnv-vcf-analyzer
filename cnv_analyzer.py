@@ -307,7 +307,7 @@ class vcf_parser:
                 txt.write(f'Maximum quality score of deletion entries: {max_qual_dels}\n')
                 txt.write(f'Minimum quality score of deletion entries: {min_qual_dels}\n')
 
-            txt.write('\n')
+            txt.write(f"\nChromosomes with cnv's present: {', '.join(df.CHROM.unique())}\n\n")
             txt.write(f"Tab delimited columns containing only the cnv's found in file: {os.path.basename(self.vcf_fl)}\n\n")
             txt.write('Index')
             df.to_csv(txt, sep='\t', mode='a')
@@ -317,6 +317,7 @@ class vcf_parser:
             df.to_csv(f"cnv.results.csv", index = False)
         if not single_entry == None:
             print(single_entry)
+
         return True
 
 def main():

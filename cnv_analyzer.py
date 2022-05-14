@@ -311,6 +311,7 @@ class vcf_parser:
             txt.write('This file was produced with the cnv_analyzer python tool.\n\n')
             txt.write('\t\t\t\t####Summary of analysis#####\n\n')
             txt.write(f'Reference used: {ref}\n\n')
+
             txt.write("The analyzer looked for the following types of cnv's: ")
             if self.find_only_dups:
                 txt.write('DUP\n')
@@ -319,6 +320,7 @@ class vcf_parser:
             if not (self.find_only_dups and self.find_only_dels):
                 txt.write('DUP, DEL\n')
             txt.write(f"Total number of CNV's: {num_of_df_entries}\n")
+
             if num_of_df_dups == None:
                 txt.write(f'Number of deletion entries found: {num_of_df_dels}\n')
                 txt.write(f'Number of unique deletion entries: {unique_dels_count}\n')
@@ -338,6 +340,7 @@ class vcf_parser:
                 txt.write(f'Minimum quality score of deletion entries: {min_qual_dups}\n')
                 txt.write(f'Maximum quality score of deletion entries: {max_qual_dels}\n')
                 txt.write(f'Minimum quality score of deletion entries: {min_qual_dels}\n')
+
             txt.write('\n')
             txt.write(f"Tab delimited columns containing only the cnv's found in file: {os.path.basename(self.vcf_fl)}\n\n")
             txt.write('Index')

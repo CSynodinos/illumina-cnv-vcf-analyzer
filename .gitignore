@@ -1,5 +1,7 @@
 # Files
 *.txt
+*.vcf
+test_files
 .venv
 __pycache__
 .DS_Store

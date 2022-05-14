@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import sys
 from inspect import getfullargspec
 from re import search, sub, compile, split
 import pandas as pd
-from sqlalchemy import all_
 
 
 class NoCnvFoundError(Exception):
@@ -28,11 +28,13 @@ class vcf_parser:
 
     cnvs = ('<DUP>', '<DEL>')
 
-    def __init__(self, vcf_fl: str, disp_info = None, find_only_dups = False, find_only_dels = False) -> None:
+    def __init__(self, vcf_fl: str, disp_info = None, find_only_dups = False, find_only_dels = False,
+                out = 'output.txt') -> None:
         self.vcf_fl = vcf_fl
         self.disp_info = disp_info
         self.find_only_dups = find_only_dups
         self.find_only_dels = find_only_dels
+        self.out = out
 
     @classmethod
     def __repr__(cls) -> str:
@@ -186,17 +188,29 @@ class vcf_parser:
             all_cnvs.index = ent_index
             num_of_df_dups = str(all_cnvs.get(key = "DUPS"))
             num_of_df_dels = None
+            qual_vals = df["QUAL"].tolist()
+            qual_vals = [int(x) for x in qual_vals]
+            max_dups = max(qual_vals)
+            max_dels = None
+            min_dups = min(qual_vals)
+            min_dels = None
         elif self.find_only_dels:
             ent_index = ["DELS"]
             all_cnvs.index = ent_index
             num_of_df_dups = None
             num_of_df_dels = str(all_cnvs.get(key = "DELS"))
+            qual_vals = df["QUAL"].tolist()
+            qual_vals = [int(x) for x in qual_vals]
+            max_dups = None
+            max_dels = max(qual_vals)
+            min_dups = None
+            min_dels = min(qual_vals)
         else:
             ent_index = ["DUPS", "DELS"]
             all_cnvs.index = ent_index
             num_of_df_dups = str(all_cnvs.get(key = "DUPS"))
             num_of_df_dels = str(all_cnvs.get(key = "DELS"))
-
+            print(df['ALT',])
         ## Scores
         if not "DUPS" in set(all_cnvs):
             dups_score = None
@@ -210,13 +224,64 @@ class vcf_parser:
             df_dels = df_scores.loc[df['ALT'] == "<DEL>"].drop(columns = 'ALT')
             dups_score = df_dups["QUAL"].value_counts().describe()
             dels_score = df_dels["QUAL"].value_counts().describe()
+        
+        def __count_cnv(score: pd.Series):
+            """Internal function to count the number of a specified cnv.
+
+            Args:
+                score (pd.Series): A column from a pandas Series.
+
+            Returns:
+                str: The number of occurances of a cnv rounded to 0 decimal places.
+            """
+
+            _count = list(score.loc[['count']])
+            _count = ''.join([str(c) for c in _count])
+            return str(int(float(_count)))
 
         if not dups_score.empty:
-            dups_count = list(dups_score.loc[['count']])
-            dups_count = ''.join([str(c) for c in dups_count])
-        
+            unique_dups_count = __count_cnv(score = dups_score)
+        if not dels_score.empty:
+            unique_dels_count = __count_cnv(score = dels_score)
 
-        #print(all_scores)
+        with open(self.out, "w") as txt:
+            txt.write('Copy Number Variant Analyzer')
+            txt.write('\n')
+            txt.write('This file was produced with the cnv_analyzer python tool.')
+            txt.write('\n')
+            txt.write('\n')
+            txt.write('Summary of analysis:')
+            txt.write('\n')
+            txt.write('\n')
+
+            txt.write("The analyzer looked for the following types of cnv's: ")
+            if self.find_only_dups:
+                txt.write('DUP')
+            if self.find_only_dels:
+                txt.write('DEL')
+            if not (self.find_only_dups and self.find_only_dels):
+                txt.write('DUP, DEL')
+
+            txt.write('\n')
+            txt.write(f"Total number of CNV's: {num_of_df_entries}")
+            txt.write('\n')
+            if num_of_df_dups == None:
+                txt.write(f'Number of deletion entries found: {num_of_df_dels}')
+                txt.write('\n')
+                txt.write(f'Number of unique deletion entries: {unique_dels_count}')
+            if num_of_df_dels == None:
+                txt.write(f'Number of duplication entries: {num_of_df_dups}')
+                txt.write('\n')
+                txt.write(f'Number of unique deletion entries: {unique_dups_count}')
+            if not (num_of_df_dups and num_of_df_dels) == None:
+                txt.write(f'Number of duplication entries: {num_of_df_dups}')
+                txt.write('\n')
+                txt.write(f'Number of deletion entries: {num_of_df_dels}')
+                txt.write('\n')
+                txt.write(f'Number of unique duplication entries: {unique_dups_count}')
+                txt.write('\n')
+                txt.write(f'Number of unique deletion entries: {unique_dels_count}')
+
 
 def main():
     vcf_parser(vcf_fl="test_files/a_sample.cnv.vcf")._stats_writer()

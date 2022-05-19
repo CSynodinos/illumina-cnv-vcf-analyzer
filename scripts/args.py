@@ -26,8 +26,10 @@ def bool_parser(var: any) -> bool:
     """Check if parameter is boolean, if not, convert it to boolean.
     Args:
         * `var` (Any): variable to check for boolean.
+
     Raises:
         TypeError: Unable to convert to boolean.
+
     Returns:
         boolean: True if var is boolean, False if not.
     """

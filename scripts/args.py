@@ -16,6 +16,7 @@ def args_parser(msg) -> argparse.Namespace:
 
     parser = argparse.ArgumentParser(description = msg, formatter_class = argparse.RawDescriptionHelpFormatter)
     parser.add_argument("-f", help = "Input .vcf file.")
+    parser.add_argument("-o", help = "Optional argument: Name of output file. Must be a .txt file. Default is output.txt.")
     parser.add_argument("-dup", help = "Optional argument: Find only duplicate type cnv's. Default is False.")
     parser.add_argument("-del", help = "Optional argument: Find only deletion type cnv's. Default is False.")
     parser.add_argument("-inf", help = "Optional argument: Display information about a specific cnv. Needs to be a start or end position findings.")

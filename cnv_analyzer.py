@@ -14,8 +14,8 @@ class vcf_parser:
 
     cnvs = ('<DUP>', '<DEL>')
 
-    def __init__(self, vcf_fl: str, disp_info = None, find_only_dups = False, find_only_dels = False,
-                out = 'output.txt', _to_csv = True) -> None:
+    def __init__(self, vcf_fl: str, out: str, disp_info = None, find_only_dups = False, 
+                find_only_dels = False, _to_csv = True) -> None:
 
         self.vcf_fl = vcf_fl
         self.disp_info = disp_info
@@ -359,10 +359,16 @@ def main():
     if not os.path.isfile(f):
             raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), f)
 
+    _out_ = arguments.get('o')
     _cdup_ = bool_parser(arguments.get('dup'))
     _cdel_ = bool_parser(arguments.get('del'))
     to_csv = arguments.get('csv')
     info = arguments.get('inf')
+
+    if _out_ == None:
+        _out_ = 'output.txt'
+    if not _out_.endswith('.txt'):
+        raise InputflError(f'Output file name "{_out_}" is not a .txt file.')
 
     if to_csv == None:
         to_csv = True
@@ -371,7 +377,7 @@ def main():
     if _cdel_ == None:
         _cdel_ = False
 
-    vcf_parser(vcf_fl = f, disp_info = info, find_only_dups = _cdup_,
+    vcf_parser(vcf_fl = f, out = _out_, disp_info = info, find_only_dups = _cdup_,
             find_only_dels = _cdel_, _to_csv = to_csv)._stats_writer()
 
 if __name__ == "__main__":
